@@ -1,0 +1,982 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ArsipKu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticker-style neo-brutalist shell. Sticky top bar + tab nav, one page at a time, right-side drawer for document detail. */
+:root{
+  --bg:#EEF0FF; --surface:#FFFFFF; --surface2:#E2E5FF; --ink:#15132B; --ink2:#4B4973;
+  --line:#15132B; --shadow:#15132B; --dot:rgba(21,19,43,.13);
+  --lime:#C8F23A; --pink:#FF5FA8; --blue:#4F5BFF; --amber:#FFB020; --mint:#2FD4A0; --danger:#D12A42; --on:#15132B;
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13112A; --surface:#1E1B3C; --surface2:#2B2756; --ink:#F2F0FF; --ink2:#B7B4E0;
+  --line:#A9A5FF; --shadow:#07061A; --dot:rgba(242,240,255,.09); --danger:#FF6B80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13112A; --surface:#1E1B3C; --surface2:#2B2756; --ink:#F2F0FF; --ink2:#B7B4E0;
+  --line:#A9A5FF; --shadow:#07061A; --dot:rgba(242,240,255,.09); --danger:#FF6B80; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:18px 18px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bg)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:800}
+h2{font-size:1.5rem;font-weight:800}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.muted{color:var(--ink2)}
+.mono{font-family:var(--f-mono);font-size:12px;word-break:break-all}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wrap{max-width:1080px;margin:0 auto}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);padding-block:12px 8px;border-bottom:2px solid var(--line);margin-bottom:20px}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:1080px;margin:0 auto}
+.logo{display:inline-flex;align-items:baseline;gap:8px;font:800 1.5rem var(--f-display);background:var(--lime);color:var(--on);border:2px solid var(--line);
+  padding:2px 12px 4px;border-radius:12px;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--shadow);text-decoration:none}
+.logo small{font:700 10px var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.top-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.role{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.nav{display:flex;gap:6px;overflow-x:auto;max-width:1080px;margin:10px auto 0;padding-bottom:4px;scrollbar-width:thin}
+.nav a{white-space:nowrap;text-decoration:none;font-weight:700;padding:5px 14px;border:2px solid transparent;border-radius:99px;color:var(--ink)}
+.nav a:hover{border-color:var(--line)}
+.nav a[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:2px solid var(--line);background:var(--surface);color:var(--ink);
+  font-weight:700;padding:8px 14px;border-radius:10px;box-shadow:3px 3px 0 var(--shadow);cursor:pointer;text-decoration:none;
+  transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.btn.sm{padding:4px 10px;font-size:13px;box-shadow:2px 2px 0 var(--shadow)}
+.btn.primary{background:var(--lime);color:var(--on)}
+.btn.blue{background:var(--blue);color:#fff}
+.btn.pink{background:var(--pink);color:var(--on)}
+.btn.mint{background:var(--mint);color:var(--on)}
+.btn.danger{background:var(--danger);color:#fff}
+input[type=text],input[type=password],input[type=date],input[type=search],select,textarea{width:100%;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:8px 10px}
+select{width:auto;font-weight:600}
+textarea{resize:vertical}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span,legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.span2{grid-column:1/-1}
+@media (max-width:620px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.chipsel{display:flex;gap:8px;flex-wrap:wrap}
+.chipradio{position:relative}
+.chipradio input{position:absolute;opacity:0;inset:0}
+.chipradio span{display:inline-block;border:2px solid var(--line);border-radius:99px;padding:3px 14px;font-weight:700;cursor:pointer;background:var(--surface)}
+.chipradio input:checked+span{background:var(--lime);color:var(--on)}
+.chipradio input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+
+/* surfaces */
+.card{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:18px;box-shadow:5px 5px 0 var(--shadow);min-width:0}
+.card.flat{box-shadow:none}
+.stack{display:flex;flex-direction:column;gap:16px}
+.cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
+.auto{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.row-end{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:14px}
+.hd{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:1px 10px;border-radius:99px;border:2px solid var(--line);font-size:12px;font-weight:700;background:var(--surface2);color:var(--ink);white-space:nowrap}
+.p-lime{background:var(--lime);color:var(--on)}.p-amber{background:var(--amber);color:var(--on)}.p-pink{background:var(--pink);color:var(--on)}
+.p-mint{background:var(--mint);color:var(--on)}.p-blue{background:var(--blue);color:#fff}.p-grey{background:var(--surface2);color:var(--ink2)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--blue));border:2px solid var(--line);display:inline-block;flex:none}
+.alert{border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:500}
+.alert.warn{background:var(--amber);color:var(--on)}
+.alert.ok{background:var(--mint);color:var(--on)}
+.alert.bad{background:var(--danger);color:#fff}
+.err{color:var(--danger);font-weight:700;min-height:1.2em}
+mark{background:var(--lime);color:var(--on);border-radius:3px;padding:0 2px}
+
+/* hero + stats */
+.hero{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{border:2px solid var(--line);border-radius:12px;padding:6px 14px;background:var(--surface);box-shadow:3px 3px 0 var(--shadow);display:flex;gap:8px;align-items:baseline}
+.stat b{font:800 1.5rem var(--f-display)}
+.life{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.life .arrow{color:var(--ink2);font-weight:700}
+.life-lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);width:100%}
+.ticks{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.ticks li{display:flex;gap:10px}
+.ticks svg{flex:none;margin-top:3px;color:var(--blue)}
+
+/* repository */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{flex:1 1 280px;display:flex;align-items:center;gap:8px;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:0 12px;box-shadow:3px 3px 0 var(--shadow)}
+.search input{border:0;background:transparent;padding:10px 0;outline:0}
+.search:focus-within{outline:3px solid var(--blue);outline-offset:2px}
+.list{display:flex;flex-direction:column;gap:10px}
+.rowbtn{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+.rowbtn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--shadow)}
+.ext{flex:none;width:46px;height:46px;border:2px solid var(--line);border-radius:10px;background:var(--c,var(--blue));color:var(--on);display:grid;place-items:center;font:800 11px var(--f-mono);text-transform:uppercase}
+.rmain{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.rmain b{font:700 1.02rem var(--f-display);overflow-wrap:anywhere}
+.rmeta{font-size:13px;color:var(--ink2);overflow-wrap:anywhere}
+.rchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.rside{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px;color:var(--ink2);flex:none}
+@media (max-width:560px){.rowbtn{flex-wrap:wrap}.rside{flex-direction:row;align-items:center;flex-wrap:wrap;width:100%;justify-content:flex-start}}
+
+/* drop zone */
+.drop{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:26px 16px;border:3px dashed var(--line);border-radius:16px;background:var(--surface2);cursor:pointer}
+.drop.over{background:var(--lime);color:var(--on)}
+.drop:focus-within{outline:3px solid var(--blue);outline-offset:2px}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop .t{font:800 1.25rem var(--f-display)}
+.meter{height:14px;border:2px solid var(--line);border-radius:99px;overflow:hidden;background:var(--surface2)}
+.meter i{display:block;height:100%;background:var(--lime);width:0;transition:width .2s}
+
+/* workflow board */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+@media (max-width:980px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.board{grid-template-columns:minmax(0,1fr)}}
+.col{background:var(--surface2);border:2px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+.col>h3{display:flex;justify-content:space-between;align-items:center;font-size:1rem}
+.wcard{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:3px 3px 0 var(--shadow)}
+.wcard b{font:700 .98rem var(--f-display);overflow-wrap:anywhere}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+
+/* retention */
+.tlw{position:relative;padding-top:6px}
+.tl{display:flex;height:18px;border:2px solid var(--line);border-radius:99px;overflow:hidden;background:var(--surface2)}
+.tl .a{background:var(--lime)}.tl .i{background:var(--amber)}
+.tl-mark{position:absolute;top:0;width:4px;height:30px;background:var(--ink);border-radius:2px}
+.tl-l{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink2);margin-top:4px;flex-wrap:wrap}
+.tablewrap{overflow-x:auto;border:2px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--dot);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);background:var(--surface2);white-space:nowrap}
+td.n{white-space:nowrap}
+
+/* drawer + modal */
+.ov{position:fixed;inset:0;z-index:70;background:rgba(10,8,30,.55);display:flex;justify-content:flex-end}
+.drawer{width:min(580px,100%);height:100%;overflow-y:auto;background:var(--bg);border-left:3px solid var(--line);
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 16px;display:flex;flex-direction:column;gap:14px}
+.ov.center{justify-content:center;align-items:center;padding:16px}
+.modal{width:min(620px,100%);max-height:92%;overflow-y:auto;background:var(--surface);border:3px solid var(--line);border-radius:16px;padding:18px;box-shadow:6px 6px 0 var(--shadow);display:flex;flex-direction:column;gap:12px}
+dl.meta{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr);gap:6px 12px;margin:0}
+dl.meta dt{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);padding-top:2px}
+dl.meta dd{margin:0;overflow-wrap:anywhere}
+pre.pv{margin:0;max-height:260px;overflow:auto;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:10px;font:12px/1.5 var(--f-mono);white-space:pre-wrap;word-break:break-word}
+img.pv{max-width:100%;max-height:300px;border:2px solid var(--line);border-radius:10px;background:var(--surface)}
+.hist{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.hist li{border-left:3px solid var(--blue);padding-left:10px;font-size:13px}
+.hist small{color:var(--ink2)}
+
+/* toast */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:90;pointer-events:none;max-width:calc(100% - 32px)}
+#toast .t{border:2px solid var(--line);border-radius:12px;padding:8px 16px;font-weight:700;box-shadow:4px 4px 0 var(--shadow);background:var(--lime);color:var(--on)}
+#toast .t.warn{background:var(--amber)}#toast .t.bad{background:var(--danger);color:#fff}
+
+/* gate */
+.gate{min-height:100vh;display:grid;place-items:center;padding-block:40px;position:relative}
+.gate-card{position:relative;width:min(440px,100%);background:var(--surface);border:3px solid var(--line);border-radius:20px;padding:26px;box-shadow:8px 8px 0 var(--shadow);display:flex;flex-direction:column;gap:14px}
+.gate .logo{align-self:flex-start;font-size:2rem}
+.sticker{position:absolute;border:2px solid var(--line);border-radius:99px;padding:2px 12px;font-weight:800;font-size:12px;box-shadow:2px 2px 0 var(--shadow);color:var(--on)}
+.s1{top:-14px;right:20px;background:var(--pink);transform:rotate(4deg)}
+.s2{bottom:-14px;left:24px;background:var(--mint);transform:rotate(-3deg)}
+.linkbtn{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:var(--ink2);font-size:13px;align-self:flex-start}
+
+/* learn */
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.q{display:flex;flex-direction:column;gap:8px;border:2px solid var(--line);border-radius:12px;padding:12px;background:var(--surface)}
+.q .acts{margin-top:2px}
+
+/* v3 flair */
+.banner{position:relative;overflow:hidden;background:var(--lime);color:var(--on);border:3px solid var(--line);border-radius:24px;padding:30px clamp(18px,4vw,38px);box-shadow:7px 7px 0 var(--shadow);margin-bottom:20px}
+.banner h1{font-size:clamp(2.4rem,7vw,4.2rem)}
+.banner p{margin-top:10px;font-size:1.05rem;max-width:46ch}
+.banner .acts{margin-top:18px;gap:10px}
+.banner .txt{position:relative;z-index:1;max-width:560px}
+.btn.ink{background:var(--ink);color:var(--bg)}
+.docs{position:absolute;right:clamp(20px,6vw,64px);top:50%;width:200px;height:200px;transform:translateY(-50%)}
+.docs i{position:absolute;width:112px;height:144px;border:3px solid var(--on);border-radius:14px;box-shadow:4px 4px 0 var(--on)}
+.docs .d1{left:0;top:34px;background:var(--pink);transform:rotate(-12deg)}
+.docs .d2{left:62px;top:0;background:var(--blue);transform:rotate(9deg)}
+.docs .d3{left:32px;top:38px;background:#fff repeating-linear-gradient(transparent 0 22px,rgba(21,19,43,.18) 22px 24px);transform:rotate(-2deg)}
+.docs .d3::after{content:"";position:absolute;right:-20px;bottom:-20px;width:46px;height:46px;border-radius:50%;background:var(--mint);border:3px solid var(--on)}
+@media (max-width:900px){.docs{display:none}}
+.ticker{overflow:hidden;border:2px solid var(--line);border-radius:99px;background:var(--ink);color:var(--bg);padding:7px 0;margin-bottom:20px;font:800 13px var(--f-display);letter-spacing:.1em;text-transform:uppercase}
+.ticker .tr{display:flex;gap:26px;white-space:nowrap;width:max-content;animation:tick 32s linear infinite}
+@keyframes tick{to{transform:translateX(-50%)}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:22px}
+.tile{display:flex;flex-direction:column;gap:6px;border:3px solid var(--line);border-radius:18px;padding:16px;background:var(--c);color:var(--tc,var(--on));box-shadow:5px 5px 0 var(--shadow);text-decoration:none;transition:transform .12s,box-shadow .12s}
+.tile:hover{transform:translate(-2px,-2px) rotate(-.7deg);box-shadow:8px 8px 0 var(--shadow)}
+.tile b{font:800 1.2rem var(--f-display)}
+.tile span:last-child{font-size:13px;opacity:.9}
+.ti{width:42px;height:42px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;background:rgba(255,255,255,.3);margin-bottom:6px}
+.stat{background:var(--c,var(--surface));color:var(--tc,var(--on))}
+.steps{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:8px 0 16px}
+.step{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.node{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);background:var(--c);color:var(--tc,var(--on));display:grid;place-items:center;font:800 14px var(--f-display);flex:none}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 16px;border:3px dashed var(--line);border-radius:20px;background:var(--surface)}
+.hd h1{font-size:clamp(2rem,5vw,2.7rem)!important;padding:0 8px;margin-left:-8px;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--lime) 70%,transparent) 62%)}
+.nav a:hover{background:var(--surface)}
+.nav a[aria-current="page"]{background:var(--lime);color:var(--on);border-color:var(--line);box-shadow:2px 2px 0 var(--shadow)}
+.card>h2:first-child,.hd h2{position:relative}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div id="app"></div>
+<div id="drawer-wrap"></div>
+<div id="modal-wrap"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+'use strict';
+/* ---------- util ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const isoDate=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const asDate=v=>(typeof v==='string'&&v.length===10)?new Date(v+'T00:00:00'):new Date(v);
+const fmtD=v=>asDate(v).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+const fmtDT=v=>new Date(v).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+const fmtSize=b=>b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB';
+const uid=()=>{try{return crypto.randomUUID()}catch(e){return [...crypto.getRandomValues(new Uint8Array(12))].map(x=>x.toString(16).padStart(2,'0')).join('')}};
+const ago=y=>{const d=new Date();d.setDate(d.getDate()-Math.round(y*365));return isoDate(d)};
+const ICO={
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+  search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  download:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  check:'<path d="M5 12l4 4 10-10"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'
+};
+const ico=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]||''}</svg>`;
+
+/* ---------- constants ---------- */
+const SEC=['Publik','Internal','Rahasia','Sangat Rahasia'];
+const LVL={'Publik':0,'Internal':1,'Rahasia':2,'Sangat Rahasia':3};
+const CLR={staff:1,reviewer:2,approver:3,arsiparis:3};
+const ROLES={
+  staff:{label:'Staf Unit',desc:'unggah dokumen, isi metadata, ajukan review'},
+  reviewer:{label:'Reviewer',desc:'memeriksa lalu meneruskan atau mengembalikan dokumen'},
+  approver:{label:'Approver',desc:'menyetujui dokumen dan membaca audit trail'},
+  arsiparis:{label:'Arsiparis',desc:'menjadikan record, mengelola retensi, pemusnahan, dan audit'}
+};
+const CAN={upload:['staff','arsiparis'],edit:['staff','arsiparis'],submit:['staff'],review:['reviewer'],approve:['approver'],
+  declare:['arsiparis'],dispose:['arsiparis'],hold:['arsiparis'],audit:['approver','arsiparis'],exportAudit:['arsiparis']};
+const CLS={
+  KU:{name:'Keuangan & Anggaran',aktif:2,inaktif:8,nasib:'musnah',c:'#8FD400'},
+  KP:{name:'Kepegawaian',aktif:5,inaktif:10,nasib:'permanen',c:'#FF5FA8'},
+  PK:{name:'Perjanjian & Kontrak',aktif:5,inaktif:5,nasib:'musnah',c:'#4F5BFF'},
+  HK:{name:'Hukum & Regulasi',aktif:5,inaktif:10,nasib:'permanen',c:'#FFB020'},
+  KB:{name:'Kebijakan & SOP',aktif:5,inaktif:5,nasib:'permanen',c:'#17C48E'},
+  RP:{name:'Rapat & Notulen',aktif:2,inaktif:3,nasib:'musnah',c:'#A66BFF'},
+  SR:{name:'Surat Dinas',aktif:1,inaktif:2,nasib:'musnah',c:'#1FB6FF'},
+  LP:{name:'Laporan Kegiatan',aktif:2,inaktif:3,nasib:'permanen',c:'#FF7A3D'}
+};
+const EXT=['pdf','docx','xlsx','pptx','txt','md','csv','json','png','jpg','jpeg','webp'];
+const TEXT_EXT=['txt','md','csv','json'], IMG_EXT=['png','jpg','jpeg','webp'];
+const MAX=10*1024*1024;
+const IDLE_MS=5*60*1000;
+const ZERO='0'.repeat(64);
+
+/* ---------- state ---------- */
+const S={tab:'beranda',gate:'setup',role:'staff',name:'',docs:[],audit:[],corrupt:0,q:'',fCls:'',fStage:'',fSec:'',sort:'new',
+  openId:null,prev:null,up:null,retF:'',auditQ:'',auditRes:null,quiz:{}};
+let KEY=null, DL=null, lastActive=Date.now(), fails=0, lockUntil=0, modalCancel=null, toastT=null, auditQ=Promise.resolve();
+try{ Promise.resolve(window.claude&&window.claude.use?window.claude.use('downloads'):null).then(x=>{DL=x||null;if(KEY)render()}).catch(()=>{DL=null}); }catch(e){DL=null}
+
+/* ---------- storage (IndexedDB, fallback memory) ---------- */
+const DB_NAME='arsipku-vault-v1', STORES=['cfg','meta','files','audit'];
+let idb=null, persistent=false;
+const mem={cfg:new Map(),meta:new Map(),files:new Map(),audit:new Map()};
+function openIDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>{STORES.forEach(s=>{if(!r.result.objectStoreNames.contains(s))r.result.createObjectStore(s)})};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('blocked'))}catch(e){rej(e)}})}
+async function initStore(){try{idb=await openIDB();persistent=true}catch(e){idb=null;persistent=false}}
+function tx(s,mode,fn){return new Promise((res,rej)=>{const t=idb.transaction(s,mode);const rq=fn(t.objectStore(s));
+  t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
+const store={
+  async get(s,k){return idb?tx(s,'readonly',o=>o.get(k)):mem[s].get(k)},
+  async put(s,k,v){if(!idb){mem[s].set(k,v);return}return tx(s,'readwrite',o=>o.put(v,k))},
+  async del(s,k){if(!idb){mem[s].delete(k);return}return tx(s,'readwrite',o=>o.delete(k))},
+  async all(s){if(!idb)return [...mem[s].entries()];
+    return new Promise((res,rej)=>{const t=idb.transaction(s,'readonly');const o=t.objectStore(s);const ks=o.getAllKeys(),vs=o.getAll();
+      t.oncomplete=()=>res(ks.result.map((k,i)=>[k,vs.result[i]]));t.onerror=()=>rej(t.error)})},
+  async clear(s){if(!idb){mem[s].clear();return}return tx(s,'readwrite',o=>o.clear())}
+};
+
+/* ---------- crypto ---------- */
+const te=new TextEncoder(), td=new TextDecoder();
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const sha256=async b=>hex(await crypto.subtle.digest('SHA-256',b));
+async function deriveKey(pass,salt,iter){
+  const base=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function enc(bytes,ctx){const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:te.encode(ctx)},KEY,bytes);return {iv,ct}}
+const dec=(rec,ctx)=>crypto.subtle.decrypt({name:'AES-GCM',iv:rec.iv,additionalData:te.encode(ctx)},KEY,rec.ct);
+const encJSON=(o,ctx)=>enc(te.encode(JSON.stringify(o)),ctx);
+const decJSON=async(r,ctx)=>JSON.parse(td.decode(await dec(r,ctx)));
+
+/* ---------- permissions + lifecycle ---------- */
+const can=a=>CAN[a].includes(S.role);
+const visible=d=>CLR[S.role]>=LVL[d.sec]||d.createdRole===S.role;
+const byId=id=>S.docs.find(d=>d.id===id);
+const actor=()=>(S.name||'Pengguna')+' ('+ROLES[S.role].label+')';
+function addYears(ds,y){const d=asDate(ds);d.setFullYear(d.getFullYear()+y);return d}
+function retInfo(d){
+  const c=CLS[d.cls]||CLS.SR, start=asDate(d.docDate), aEnd=addYears(d.docDate,c.aktif), iEnd=addYears(d.docDate,c.aktif+c.inaktif), now=new Date();
+  const phase=now<aEnd?'aktif':(now<iEnd?'inaktif':'due'), total=iEnd-start;
+  return {c,start,aEnd,iEnd,phase,pct:Math.min(100,Math.max(0,(now-start)/total*100)),aPct:(aEnd-start)/total*100,daysLeft:Math.ceil((iEnd-now)/864e5)};
+}
+function stageOf(d){
+  if(d.disposition==='musnah')return {key:'musnah',label:'Dimusnahkan',cls:'p-grey'};
+  if(d.disposition==='statis')return {key:'statis',label:'Arsip statis',cls:'p-blue'};
+  if(d.isRecord){const p=retInfo(d).phase;
+    return p==='aktif'?{key:'rec-aktif',label:'Arsip aktif',cls:'p-lime'}:p==='inaktif'?{key:'rec-inaktif',label:'Arsip inaktif',cls:'p-amber'}:{key:'rec-due',label:'Jatuh tempo',cls:'p-pink'}}
+  return {draft:{key:'draft',label:'Draft',cls:'p-grey'},revisi:{key:'revisi',label:'Perlu revisi',cls:'p-pink'},review:{key:'review',label:'Review',cls:'p-amber'},
+    approval:{key:'approval',label:'Persetujuan',cls:'p-blue'},terbit:{key:'terbit',label:'Terbit',cls:'p-mint'}}[d.status];
+}
+const pill=d=>{const s=stageOf(d);return `<span class="pill ${s.cls}">${s.label}</span>`};
+const clsChip=d=>{const c=CLS[d.cls];return `<span class="pill" style="--c:${c?c.c:'#888'}"><i class="dot"></i>${esc(d.cls)}</span>`};
+const secChip=d=>`<span class="pill">${ico('shield',12)}${esc(d.sec)}</span>`;
+const nasibLabel=n=>n==='musnah'?'Musnah':'Permanen (arsip statis)';
+function canEditDoc(d){return !d.isRecord&&can('edit')&&(['draft','revisi'].includes(d.status)||S.role==='arsiparis')}
+
+/* ---------- audit trail (hash chain, encrypted) ---------- */
+const auditHash=e=>sha256(te.encode(JSON.stringify([e.seq,e.ts,e.actor,e.role,e.action,e.docId,e.docTitle,e.detail,e.prev])));
+function logAudit(action,doc,detail=''){
+  auditQ=auditQ.then(async()=>{
+    const prev=S.audit.length?S.audit[S.audit.length-1].hash:ZERO, seq=S.audit.length+1;
+    const e={seq,ts:new Date().toISOString(),actor:actor(),role:S.role,action,docId:doc?doc.id:null,docTitle:doc?doc.title:'',detail:detail||'',prev};
+    e.hash=await auditHash(e);S.audit.push(e);await store.put('audit',seq,await encJSON(e,'audit:'+seq));
+  }).catch(()=>{});
+  return auditQ;
+}
+async function verifyAudit(){
+  let prev=ZERO;
+  for(let i=0;i<S.audit.length;i++){const e=S.audit[i];
+    if(e.seq!==i+1)return {ok:false,at:i+1,why:'urutan nomor terputus (ada entri hilang)'};
+    if(e.prev!==prev)return {ok:false,at:e.seq,why:'penaut hash sebelumnya tidak cocok'};
+    if(await auditHash(e)!==e.hash)return {ok:false,at:e.seq,why:'isi entri berubah'};
+    prev=e.hash}
+  return {ok:true,n:S.audit.length};
+}
+
+/* ---------- document ops ---------- */
+const saveDoc=async d=>store.put('meta',d.id,await encJSON(d,'meta:'+d.id));
+function addHistory(d,action,note){d.history.push({ts:new Date().toISOString(),role:S.role,actor:actor(),action,note:note||''})}
+const safeName=n=>n.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').slice(0,120);
+function sniffOK(ext,u8){
+  const s=(...a)=>a.every((v,i)=>u8[i]===v);
+  if(ext==='pdf')return s(0x25,0x50,0x44,0x46);
+  if(ext==='png')return s(0x89,0x50,0x4E,0x47);
+  if(ext==='jpg'||ext==='jpeg')return s(0xFF,0xD8,0xFF);
+  if(ext==='webp')return s(0x52,0x49,0x46,0x46);
+  if(['docx','xlsx','pptx'].includes(ext))return s(0x50,0x4B);
+  if(TEXT_EXT.includes(ext))return !u8.slice(0,2000).includes(0);
+  return false;
+}
+const extractText=(ext,u8)=>TEXT_EXT.includes(ext)?td.decode(u8.slice(0,20000)):'';
+async function createDoc(m,u8,fi,opts={}){
+  const id=uid(), hash=await sha256(u8), now=new Date().toISOString();
+  const d={id,title:m.title,number:m.number||'',docDate:m.docDate,cls:m.cls,sec:m.sec,unit:m.unit||'',author:m.author||'',tags:m.tags||[],desc:m.desc||'',
+    file:{name:fi.name,ext:fi.ext,size:u8.byteLength,hash},version:1,versions:[{v:1,hash,ts:now,name:fi.name,size:u8.byteLength}],uploadedAt:now,
+    createdRole:opts.role||S.role,status:'draft',isRecord:false,recordDate:null,disposition:null,hold:false,text:extractText(fi.ext,u8),history:[],example:!!opts.example};
+  addHistory(d,'Diunggah sebagai draft v1',opts.example?'contoh data':'');
+  await store.put('files',id,await enc(u8,'file:'+id));await saveDoc(d);S.docs.push(d);return d;
+}
+async function readFileOf(d){
+  const rec=await store.get('files',d.id);if(!rec)throw new Error('Berkas tidak ditemukan.');
+  const buf=await dec(rec,'file:'+d.id);return {buf,ok:(await sha256(buf))===d.file.hash};
+}
+
+/* ---------- vault ---------- */
+async function createVault(pass,name,seed){
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iter=250000;
+  KEY=await deriveKey(pass,salt,iter);
+  await Promise.all(STORES.map(s=>store.clear(s)));
+  await store.put('cfg','vault',{salt,iter,chk:await enc(te.encode('arsipku-ok'),'check'),v:1});
+  await store.put('cfg','profile',await encJSON({name},'profile'));
+  S.name=name;S.docs=[];S.audit=[];S.corrupt=0;S.role='staff';
+  await logAudit('Vault dibuat','', 'Enkripsi AES-256-GCM, PBKDF2 '+iter+' putaran');
+  if(seed)await seedExamples();
+}
+async function unlockVault(pass){
+  const v=await store.get('cfg','vault');KEY=await deriveKey(pass,v.salt,v.iter);
+  try{if(td.decode(await dec(v.chk,'check'))!=='arsipku-ok')throw 0}catch(e){KEY=null;throw new Error('bad')}
+  await loadAll();
+}
+async function loadAll(){
+  S.docs=[];S.audit=[];S.corrupt=0;S.name='';
+  try{const p=await store.get('cfg','profile');if(p)S.name=(await decJSON(p,'profile')).name||''}catch(e){}
+  for(const [k,v] of await store.all('meta')){try{S.docs.push(await decJSON(v,'meta:'+k))}catch(e){S.corrupt++}}
+  const au=await store.all('audit');au.sort((a,b)=>a[0]-b[0]);
+  for(const [k,v] of au){try{S.audit.push(await decJSON(v,'audit:'+k))}catch(e){S.corrupt++}}
+}
+async function lockVault(reason){
+  if(!KEY)return;
+  await logAudit('Vault dikunci',null,reason||'manual');
+  KEY=null;S.docs=[];S.audit=[];S.openId=null;S.up=null;closeModal();
+  if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null;
+  S.gate='unlock';renderGate(reason&&reason!=='manual'?reason:'');
+}
+async function resetVault(){await Promise.all(STORES.map(s=>store.clear(s)));KEY=null;S.docs=[];S.audit=[];S.openId=null;S.prev=null;await startApp();toast('Semua data dihapus.')}
+
+/* ---------- UI helpers ---------- */
+function toast(msg,tone=''){const t=$('#toast');t.innerHTML=`<div class="t ${tone}">${esc(msg)}</div>`;clearTimeout(toastT);toastT=setTimeout(()=>{t.innerHTML=''},3400)}
+function modal(html,cancel){$('#modal-wrap').innerHTML=`<div class="ov center" data-act="modal-bg"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  modalCancel=cancel||closeModal;const f=$('#modal-wrap textarea,#modal-wrap input,#modal-wrap .primary');if(f)f.focus()}
+function closeModal(){$('#modal-wrap').innerHTML='';modalCancel=null}
+function ask(o){return new Promise(res=>{
+  modal(`<h3>${esc(o.title)}</h3>${o.body?`<p class="muted">${o.body}</p>`:''}
+    ${o.label?`<label class="fld"><span>${esc(o.label)}${o.required?' *':''}</span><textarea id="ask-note" rows="3"></textarea></label>`:''}
+    <p class="err" id="ask-err" role="alert"></p>
+    <div class="row-end"><button class="btn" id="ask-cancel">Batal</button><button class="btn ${o.tone||'primary'}" id="ask-ok">${esc(o.confirm||'Lanjut')}</button></div>`,
+    ()=>{closeModal();res(null)});
+  $('#ask-cancel').onclick=()=>{closeModal();res(null)};
+  $('#ask-ok').onclick=()=>{const v=o.label?$('#ask-note').value.trim():'';if(o.required&&!v){$('#ask-err').textContent='Catatan wajib diisi.';return}closeModal();res(v)};
+})}
+function hl(text,tokens){
+  if(!tokens.length)return esc(text);
+  const re=new RegExp('('+tokens.map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  return String(text).split(re).map((p,i)=>i%2?'<mark>'+esc(p)+'</mark>':esc(p)).join('');
+}
+
+function emptyHTML(title,text,btn){
+  return `<div class="empty"><svg width="132" height="104" viewBox="0 0 120 96" fill="none" aria-hidden="true"><path d="M8 20a6 6 0 016-6h26l10 12h56a6 6 0 016 6v48a6 6 0 01-6 6H14a6 6 0 01-6-6z" style="fill:var(--amber);stroke:var(--line)" stroke-width="3" stroke-linejoin="round"/><g transform="rotate(-6 52 52)"><rect x="22" y="30" width="60" height="44" rx="5" style="fill:var(--surface);stroke:var(--line)" stroke-width="3"/><path d="M34 46h34M34 56h22" style="stroke:var(--line)" stroke-width="3" stroke-linecap="round"/></g><circle cx="96" cy="70" r="14" style="fill:var(--pink);stroke:var(--line)" stroke-width="3"/><path d="M96 63v14M89 70h14" style="stroke:var(--on)" stroke-width="3" stroke-linecap="round"/></svg>
+    <h3>${esc(title)}</h3><p class="muted" style="max-width:42ch">${esc(text)}</p>${btn||''}</div>`;
+}
+
+/* ---------- gate ---------- */
+function renderGate(msg){
+  const setup=S.gate==='setup';
+  $('#drawer-wrap').innerHTML='';
+  $('#app').innerHTML=`<main class="gate"><div class="gate-card">
+    <span class="sticker s1">AES-256</span><span class="sticker s2">audit trail</span>
+    <span class="logo">ArsipKu<small>EDMS mini</small></span>
+    <h2>${setup?'Bikin vault dulu, yuk.':'Vault lagi dikunci.'}</h2>
+    <p class="muted">${setup?'Semua file, metadata, dan jejak audit dienkripsi di perangkatmu sebelum disimpan. Tidak ada yang dikirim ke server.':'Masukkan passphrase buat membuka dokumenmu.'}</p>
+    ${msg?`<p class="alert warn" role="alert">${esc(msg)}</p>`:''}
+    <form id="gate-form" class="stack" autocomplete="off">
+      ${setup?`<label class="fld"><span>Nama panggilan</span><input type="text" id="g-name" maxlength="40" placeholder="mis. Kiki"></label>`:''}
+      <label class="fld"><span>Passphrase${setup?' (min. 10 karakter)':''}</span><input type="password" id="g-pass" autocomplete="${setup?'new-password':'current-password'}"></label>
+      ${setup?`<label class="fld"><span>Ulangi passphrase</span><input type="password" id="g-pass2" autocomplete="new-password"></label>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="g-seed" checked> Isi dengan 10 dokumen contoh buat eksplor</label>
+      <p class="alert warn">Lupa passphrase = data tidak bisa dipulihkan. Tidak ada tombol "forgot password".</p>`:''}
+      <p class="err" id="g-err" role="alert"></p>
+      <button class="btn primary" id="g-go" type="submit">${setup?'Bikin vault':'Buka vault'}</button>
+    </form>
+    ${setup?'':`<button class="linkbtn" data-act="reset-ask">Lupa passphrase? Hapus vault dan mulai ulang</button>`}
+    ${persistent?'':'<p class="muted" style="font-size:12px">Penyimpanan browser tidak tersedia di tampilan ini, jadi data hanya hidup selama tab terbuka.</p>'}
+  </div></main>`;
+  const f=$('#g-name')||$('#g-pass');if(f)f.focus();
+}
+async function onGate(){
+  const err=m=>{$('#g-err').textContent=m},go=$('#g-go'),pass=$('#g-pass').value;
+  if(S.gate==='setup'){
+    const name=$('#g-name').value.trim();
+    if(!name)return err('Isi nama panggilan dulu.');
+    if(pass.length<10)return err('Passphrase minimal 10 karakter.');
+    if(pass!==$('#g-pass2').value)return err('Dua passphrase belum sama.');
+    go.disabled=true;go.textContent='Menyiapkan kunci…';
+    try{await createVault(pass,name,$('#g-seed').checked)}catch(e){go.disabled=false;go.textContent='Bikin vault';return err('Gagal bikin vault: '+e.message)}
+  }else{
+    if(Date.now()<lockUntil)return err('Tunggu '+Math.ceil((lockUntil-Date.now())/1000)+' detik sebelum coba lagi.');
+    if(!pass)return err('Masukkan passphrase.');
+    go.disabled=true;go.textContent='Membuka…';
+    try{await unlockVault(pass)}catch(e){fails++;lockUntil=Date.now()+Math.min(30000,1000*2**fails);go.disabled=false;go.textContent='Buka vault';return err('Passphrase salah. Coba lagi sebentar lagi.')}
+    S.role='staff';await logAudit('Vault dibuka',null,'');
+  }
+  fails=0;lastActive=Date.now();if(!location.hash||location.hash==='#')location.hash='#beranda';S.tab=tabFromHash();render();
+}
+
+/* ---------- shell ---------- */
+const TABS=[['beranda','Beranda'],['repository','Repository'],['upload','Upload'],['workflow','Workflow'],['retensi','Retensi'],['audit','Audit'],['belajar','Belajar']];
+const tabFromHash=()=>{const h=(location.hash||'').slice(1);return TABS.some(t=>t[0]===h)?h:'beranda'};
+function render(){
+  if(!KEY){renderGate();return}
+  const banner=(!persistent?'<p class="alert warn wrap" style="margin-bottom:14px">Penyimpanan browser tidak tersedia, data hilang saat tab ditutup.</p>':'')+
+    (S.corrupt?`<p class="alert bad wrap" style="margin-bottom:14px" role="alert">${S.corrupt} entri gagal didekripsi. Bisa jadi data rusak atau diubah.</p>`:'');
+  $('#app').innerHTML=`<header class="top"><div class="top-in">
+      <a class="logo" href="#beranda">ArsipKu<small>EDMS mini</small></a>
+      <div class="top-r">
+        <label class="role"><span>Peran</span><select id="role-sel" aria-label="Peran aktif (simulasi)">${Object.entries(ROLES).map(([k,r])=>`<option value="${k}"${S.role===k?' selected':''}>${r.label}</option>`).join('')}</select></label>
+        </div></div>
+      <nav class="nav" aria-label="Menu utama">${TABS.map(t=>`<a href="#${t[0]}"${S.tab===t[0]?' aria-current="page"':''}>${t[1]}</a>`).join('')}</nav></header>
+    <div class="wrap">${banner}<main id="page">${pageHTML()}</main></div>`;
+  if(S.tab==='repository')renderRepoResults();
+  if(S.tab==='upload')updateRetPreview('up');
+  if(S.tab==='belajar')renderQuiz();
+  renderDrawer();
+}
+function pageHTML(){return {beranda:pageBeranda,repository:pageRepo,upload:pageUpload,workflow:pageWorkflow,retensi:pageRetensi,audit:pageAudit,belajar:pageBelajar}[S.tab]()}
+
+/* ---------- beranda ---------- */
+function queueFor(){
+  const v=S.docs.filter(visible);
+  if(S.role==='staff')return {t:'Perlu kamu lengkapi atau ajukan',items:v.filter(d=>!d.isRecord&&['draft','revisi'].includes(d.status)),a:'Buka dan ajukan review'};
+  if(S.role==='reviewer')return {t:'Menunggu review kamu',items:v.filter(d=>d.status==='review'&&!d.isRecord),a:'Periksa dokumen'};
+  if(S.role==='approver')return {t:'Menunggu persetujuan kamu',items:v.filter(d=>d.status==='approval'&&!d.isRecord),a:'Setujui atau tolak'};
+  return {t:'Siap dijadikan record atau jatuh tempo',items:v.filter(d=>(d.status==='terbit'&&!d.isRecord)||(d.isRecord&&!d.disposition&&retInfo(d).phase==='due')),a:'Proses sekarang'};
+}
+const step=(n,label,c,tc)=>`<span class="step"><span class="node" style="--c:${c};--tc:${tc||'var(--on)'}">${n}</span>${label}</span>`;
+function pageBeranda(){
+  const q=queueFor(), v=S.docs.filter(visible), has=S.docs.length>0;
+  const nDoc=v.filter(d=>!d.isRecord).length, nRec=v.filter(d=>d.isRecord&&!d.disposition).length, nDue=v.filter(d=>d.isRecord&&!d.disposition&&retInfo(d).phase==='due').length;
+  const tick=['Dokumen','Metadata','Klasifikasi','Workflow','Record','Retensi','Audit trail','Arsip statis'].map(t=>`<span>${t}</span><span>•</span>`).join('');
+  const tiles=[['#upload','Upload dokumen','Enkripsi lalu isi metadata','upload','var(--pink)',''],['#repository','Cari dokumen','Filter dan cari sampai ke isi file','search','var(--blue)','#fff'],['#workflow','Alur persetujuan','Dari draft sampai terbit','layers','var(--amber)',''],['#belajar','Dokumen vs record','Belajar plus kuis singkat','shield','var(--mint)','']];
+  const upBtn=can('upload')?'<a class="btn primary" href="#upload">Upload dokumen</a>':'<span class="muted">Ganti peran ke Staf Unit atau Arsiparis untuk upload.</span>';
+  return `<section class="banner"><div class="docs" aria-hidden="true"><i class="d1"></i><i class="d2"></i><i class="d3"></i></div>
+    <div class="txt"><span class="pill" style="background:var(--surface);color:var(--ink)">${ico('shield',12)}Terenkripsi di perangkatmu</span>
+      <h1 style="margin-top:12px">Halo, ${esc(S.name||'Kamu')}.</h1>
+      <p>${has?`Kamu lagi jadi <b>${ROLES[S.role].label}</b>: ${ROLES[S.role].desc}. Ganti peran di pojok kanan atas.`:'Arsipmu masih kosong. Mulai dari satu dokumen: upload, isi metadata, lalu lihat dia jalan lewat workflow sampai jadi arsip.'}</p>
+      <div class="acts">${can('upload')?`<a class="btn ink" href="#upload">${ico('upload',16)}Upload dokumen</a>`:''}<a class="btn" href="#belajar">Dokumen vs record</a></div></div></section>
+  <div class="ticker" aria-hidden="true"><div class="tr">${tick}${tick}</div></div>
+  <div class="tiles">${tiles.map(([h,t,d,ic,c,tc])=>`<a class="tile" href="${h}" style="--c:${c};--tc:${tc||'var(--on)'}"><span class="ti">${ico(ic,22)}</span><b>${t}</b><span>${d}</span></a>`).join('')}</div>
+  ${has?`<div class="stats" style="margin-bottom:22px"><div class="stat" style="--c:var(--pink)"><b>${nDoc}</b>dokumen kerja</div><div class="stat" style="--c:var(--lime)"><b>${nRec}</b>record aktif/inaktif</div><div class="stat" style="--c:var(--amber)"><b>${nDue}</b>jatuh tempo</div>${can('audit')?`<div class="stat" style="--c:var(--blue);--tc:#fff"><b>${S.audit.length}</b>entri audit</div>`:''}</div>`:''}
+  <div class="cols"><div class="stack">
+    <section class="card">${has?`<div class="hd"><h2>${q.t}</h2><span class="pill p-blue">${q.items.length}</span></div>`:''}
+      ${q.items.length?`<div class="list">${q.items.slice(0,6).map(rowHTML).join('')}</div>`:has?`<p class="muted">Kosong. Semua beres untuk peranmu. Coba ganti peran atau upload dokumen baru.</p>`:emptyHTML('Belum ada dokumen','Upload file pertamamu. Dia langsung dienkripsi dan muncul di sini beserta tugas-tugasnya.',upBtn)}</section>
+    <section class="card"><h2 style="margin-bottom:14px">Perjalanan satu dokumen</h2>
+      <p class="life-lab">Fase dokumen · masih bisa berubah</p>
+      <div class="steps">${step(1,'Draft','var(--surface2)','var(--ink)')}<span class="arrow">→</span>${step(2,'Review','var(--amber)')}<span class="arrow">→</span>${step(3,'Persetujuan','var(--blue)','#fff')}<span class="arrow">→</span>${step(4,'Terbit','var(--mint)')}</div>
+      <p class="life-lab">Fase record dan arsip · terkunci, ada retensi</p>
+      <div class="steps">${step(5,'Record','var(--lime)')}<span class="arrow">→</span>${step(6,'Aktif','var(--lime)')}<span class="arrow">→</span>${step(7,'Inaktif','var(--amber)')}<span class="arrow">→</span>${step(8,'Musnah atau arsip statis','var(--pink)')}</div>
+      <p class="muted">Garis pemisahnya ada di tombol <b>Jadikan record</b>. Sebelum itu dokumen boleh direvisi. Sesudahnya isinya dikunci sebagai bukti.</p></section></div>
+  <aside class="card"><h2 style="margin-bottom:12px">Kenapa dokumenmu aman</h2><ul class="ticks">
+    ${['File, metadata, dan audit dienkripsi AES-256-GCM sebelum disimpan.','Kunci enkripsi dibuat acak di browsermu dan tidak bisa diekspor, jadi isi penyimpanan mentah tidak terbaca.','Semua diproses di perangkatmu. Tidak ada file yang dikirim ke server.','Tiap file punya sidik jari SHA-256, dicek ulang saat dibuka dan diunduh.','Tipe file dicek dari isinya, bukan cuma ekstensi. Maksimal 10 MB.','Audit trail berantai hash: ubah satu entri, rantainya putus.','Peran dan level keamanan membatasi siapa melihat apa.'].map(t=>`<li>${ico('check',16)}<span>${t}</span></li>`).join('')}</ul>
+    <p class="alert warn" style="margin-top:14px;font-size:13px">Ini aplikasi belajar tanpa password. Siapa pun yang memakai browser ini bisa membuka datamu, jadi pakai di perangkat pribadi. Peran dipilih sendiri (simulasi) dan data tinggal di browser ini. Untuk produksi, pakai server, login sungguhan, dan backup.</p>
+    <button class="btn sm danger" data-act="reset-ask" style="margin-top:12px">Hapus semua data</button></aside></div>`;
+}
+
+/* ---------- repository ---------- */
+function rowHTML(d,tokens=[],where=[]){
+  const c=CLS[d.cls];
+  return `<button class="rowbtn" data-act="open" data-id="${d.id}" style="--c:${c?c.c:'#888'}">
+    <span class="ext">${esc(d.file.ext)}</span>
+    <span class="rmain"><b>${hl(d.title,tokens)}</b>
+      <span class="rmeta">${[d.number,c?c.name:d.cls,d.unit].filter(Boolean).map(x=>hl(x,tokens)).join(' · ')}</span>
+      <span class="rchips">${clsChip(d)}${secChip(d)}${d.hold?'<span class="pill p-pink">Legal hold</span>':''}${d.example?'<span class="pill p-grey">contoh</span>':''}${where.map(w=>`<span class="pill p-lime">cocok: ${w}</span>`).join('')}</span></span>
+    <span class="rside">${pill(d)}<span>${fmtD(d.docDate)}</span><span>${d.disposition==='musnah'?'berkas dihapus':fmtSize(d.file.size)}</span></span></button>`;
+}
+function pageRepo(){
+  const opt=(arr,cur)=>arr.map(([v,l])=>`<option value="${v}"${cur===v?' selected':''}>${l}</option>`).join('');
+  const stages=[['','Semua status'],['draft','Draft'],['revisi','Perlu revisi'],['review','Review'],['approval','Persetujuan'],['terbit','Terbit'],['rec-aktif','Arsip aktif'],['rec-inaktif','Arsip inaktif'],['rec-due','Jatuh tempo'],['statis','Arsip statis'],['musnah','Dimusnahkan']];
+  return `<div class="hd"><h1 style="font-size:2rem">Repository</h1><button class="btn primary" data-act="goto-upload">${ico('upload',16)}Upload dokumen</button></div>
+  <div class="toolbar"><label class="search">${ico('search')}<input id="repo-q" type="search" placeholder="Cari judul, nomor, kata kunci, isi file teks" value="${esc(S.q)}" autocomplete="off" aria-label="Cari dokumen"></label></div>
+  <div class="toolbar">
+    <select id="repo-cls" aria-label="Klasifikasi">${opt([['','Semua klasifikasi'],...Object.entries(CLS).map(([k,c])=>[k,k+' · '+c.name])],S.fCls)}</select>
+    <select id="repo-stage" aria-label="Status">${opt(stages,S.fStage)}</select>
+    <select id="repo-sec" aria-label="Keamanan">${opt([['','Semua level'],...SEC.map(s=>[s,s])],S.fSec)}</select>
+    <select id="repo-sort" aria-label="Urutkan">${opt([['new','Terbaru diunggah'],['date','Tanggal dokumen'],['title','Judul A-Z']],S.sort)}</select></div>
+  <p class="muted" id="repo-count" style="margin-bottom:10px"></p><div id="repo-results" class="list"></div>`;
+}
+function scoreDoc(d,tokens){
+  const f={Judul:[d.title,5],Nomor:[d.number,4],'Kata kunci':[(d.tags||[]).join(' '),3],Deskripsi:[d.desc,2],Metadata:[[d.unit,d.author,d.cls,(CLS[d.cls]||{}).name,d.file.name].join(' '),2],Isi:[d.text,1]};
+  let total=0;const where=new Set();
+  for(const t of tokens){let hit=false;
+    for(const [k,[txt,w]] of Object.entries(f)){if(txt&&String(txt).toLowerCase().includes(t)){total+=w;hit=true;if(k==='Isi'||k==='Kata kunci'||k==='Deskripsi')where.add(k.toLowerCase())}}
+    if(!hit)return {total:0,where:[]}}
+  return {total,where:[...where]};
+}
+function renderRepoResults(){
+  const box=$('#repo-results');if(!box)return;
+  const tokens=S.q.toLowerCase().split(/\s+/).filter(Boolean), vis=S.docs.filter(visible), hidden=S.docs.length-vis.length;
+  let rows=vis.filter(d=>(!S.fCls||d.cls===S.fCls)&&(!S.fSec||d.sec===S.fSec)&&(!S.fStage||stageOf(d).key===S.fStage)).map(d=>({d,s:tokens.length?scoreDoc(d,tokens):{total:1,where:[]}})).filter(x=>x.s.total>0);
+  rows.sort((a,b)=>tokens.length?b.s.total-a.s.total:S.sort==='title'?a.d.title.localeCompare(b.d.title,'id'):S.sort==='date'?asDate(b.d.docDate)-asDate(a.d.docDate):b.d.uploadedAt.localeCompare(a.d.uploadedAt));
+  $('#repo-count').innerHTML=`${rows.length} dokumen${tokens.length?' cocok':''}${hidden>0?` · ${hidden} disembunyikan karena level keamanan peranmu`:''}`;
+  box.innerHTML=rows.length?rows.map(x=>rowHTML(x.d,tokens,x.s.where)).join(''):(S.docs.length?`<div class="empty"><h3>Belum ada yang cocok</h3><p class="muted">Coba kata lain atau longgarkan filter.</p></div>`:emptyHTML('Repository masih kosong','Upload dokumen pertamamu, isi metadatanya, lalu dia muncul di sini.',can('upload')?'<a class="btn primary" href="#upload">Upload dokumen</a>':'<span class="muted">Ganti peran ke Staf Unit atau Arsiparis untuk upload.</span>'));
+}
+
+/* ---------- upload + metadata form ---------- */
+function metaForm(p,v={}){
+  return `<div class="grid2">
+    <label class="fld span2"><span>Judul dokumen *</span><input type="text" id="${p}-title" maxlength="200" value="${esc(v.title||'')}"></label>
+    <label class="fld"><span>Nomor dokumen</span><input type="text" id="${p}-no" maxlength="60" placeholder="mis. 045/KEU/XI/2026" value="${esc(v.number||'')}"></label>
+    <label class="fld"><span>Tanggal dokumen *</span><input type="date" id="${p}-date" value="${esc(v.docDate||isoDate(new Date()))}"></label>
+    <label class="fld span2"><span>Klasifikasi (kode arsip) *</span><select id="${p}-cls" style="width:100%">${Object.entries(CLS).map(([k,c])=>`<option value="${k}"${v.cls===k?' selected':''}>${k} · ${c.name}</option>`).join('')}</select></label>
+    <p class="alert flat span2" id="${p}-ret" style="background:var(--surface2)"></p>
+    <fieldset class="span2"><legend>Level keamanan *</legend><div class="chipsel">${SEC.map(s=>`<label class="chipradio"><input type="radio" name="${p}-sec" value="${s}"${(v.sec||'Internal')===s?' checked':''}><span>${s}</span></label>`).join('')}</div></fieldset>
+    <label class="fld"><span>Unit kerja</span><input type="text" id="${p}-unit" maxlength="80" value="${esc(v.unit||'')}"></label>
+    <label class="fld"><span>Pencipta / penanggung jawab</span><input type="text" id="${p}-au" maxlength="80" value="${esc(v.author||'')}"></label>
+    <label class="fld span2"><span>Kata kunci (pisahkan dengan koma)</span><input type="text" id="${p}-tags" maxlength="200" value="${esc((v.tags||[]).join(', '))}"></label>
+    <label class="fld span2"><span>Deskripsi singkat</span><textarea id="${p}-desc" rows="3" maxlength="600">${esc(v.desc||'')}</textarea></label></div>`;
+}
+function readMeta(p){
+  const g=id=>($('#'+p+'-'+id)||{value:''}).value.trim(), sec=($('input[name="'+p+'-sec"]:checked')||{}).value;
+  const m={title:g('title'),number:g('no'),docDate:g('date'),cls:g('cls'),sec,unit:g('unit'),author:g('au'),desc:g('desc'),tags:g('tags').split(',').map(x=>x.trim()).filter(Boolean).slice(0,12)};
+  const errs=[];if(!m.title)errs.push('Judul wajib diisi.');if(!m.docDate)errs.push('Tanggal dokumen wajib diisi.');if(!CLS[m.cls])errs.push('Pilih klasifikasi.');if(!SEC.includes(m.sec))errs.push('Pilih level keamanan.');
+  return {m,errs};
+}
+function updateRetPreview(p){
+  const el=$('#'+p+'-ret'),sel=$('#'+p+'-cls');if(!el||!sel)return;const c=CLS[sel.value];
+  if(c)el.innerHTML=`<b>Jadwal retensi:</b> aktif ${c.aktif} tahun → inaktif ${c.inaktif} tahun → nasib akhir <b>${nasibLabel(c.nasib)}</b>. Dihitung dari tanggal dokumen.`;
+}
+function updateMeter(p){
+  const bar=$('#'+p+'-meter-bar');if(!bar)return;const {m}=readMeta(p);
+  const n=[m.title,m.number,m.docDate,m.cls,m.sec,m.unit,m.author,m.tags.length,m.desc].filter(Boolean).length;
+  bar.style.width=(n/9*100)+'%';$('#'+p+'-meter-t').textContent=n+'/9 kolom terisi · '+(n<5?'masih kosong banget':n<8?'lumayan':'rapi');
+}
+function pageUpload(){
+  S.up=null;
+  if(!can('upload'))return `<div class="card"><h2>Upload belum bisa untuk peranmu</h2><p class="muted" style="margin-top:8px">Peran ${ROLES[S.role].label} tidak punya hak unggah. Ganti ke <b>Staf Unit</b> atau <b>Arsiparis</b> di pojok kanan atas.</p></div>`;
+  return `<div class="hd"><h1 style="font-size:2rem">Upload dokumen</h1></div>
+  <div class="cols"><div class="stack">
+    <label class="drop" id="drop"><span class="t">Taruh file di sini</span><span class="muted">atau klik buat pilih · PDF, Word, Excel, PowerPoint, gambar, teks · maks 10 MB</span>
+      <input id="up-file" type="file" accept=".${EXT.join(',.')}"></label>
+    <div id="up-fileinfo"></div>
+    <section class="card"><h2 style="margin-bottom:14px">Metadata</h2>${metaForm('up')}<p class="err" id="up-err" role="alert" style="margin-top:10px"></p>
+      <div class="row-end"><button class="btn primary" data-act="up-save">${ico('shield',16)}Enkripsi dan simpan sebagai Draft</button></div></section></div>
+  <aside class="stack"><section class="card"><h3 style="margin-bottom:10px">Kelengkapan metadata</h3><div class="meter"><i id="up-meter-bar"></i></div><p class="muted" id="up-meter-t" style="margin-top:6px;font-size:13px"></p></section>
+    <section class="card"><h3 style="margin-bottom:10px">Yang terjadi saat simpan</h3><ul class="ticks">
+      ${['Isi file dicek, bukan cuma namanya.','SHA-256 dihitung dari file asli.','File dienkripsi AES-256-GCM di perangkatmu.','Status awal: Draft. Belum jadi record.','Aksi tercatat di audit trail.'].map(t=>`<li>${ico('check',16)}<span>${t}</span></li>`).join('')}</ul></section></aside></div>`;
+}
+async function pickFile(f){
+  const info=$('#up-fileinfo'),bad=m=>{S.up=null;info.innerHTML=`<p class="alert bad" role="alert">${esc(m)}</p>`};
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(!EXT.includes(ext))return bad('Tipe .'+ext+' belum diizinkan. Boleh: '+EXT.join(', ')+'.');
+  if(f.size===0)return bad('File kosong.');if(f.size>MAX)return bad('File '+fmtSize(f.size)+' melebihi batas 10 MB.');
+  const u8=new Uint8Array(await f.arrayBuffer());
+  if(!sniffOK(ext,u8))return bad('Isi file tidak cocok dengan ekstensi .'+ext+'. Ditolak demi keamanan.');
+  const hash=await sha256(u8);S.up={u8,ext,hash,name:safeName(f.name)};
+  info.innerHTML=`<div class="card flat" style="display:flex;gap:12px;align-items:center"><span class="ext" style="--c:var(--lime)">${esc(ext)}</span><div style="min-width:0"><b style="overflow-wrap:anywhere">${esc(S.up.name)}</b><div class="muted" style="font-size:13px">${fmtSize(u8.length)} · tipe valid</div><div class="mono muted">SHA-256 ${hash}</div></div></div>`;
+  const t=$('#up-title');if(t&&!t.value){t.value=S.up.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/^./,c=>c.toUpperCase())}
+  updateMeter('up');
+}
+async function saveUpload(){
+  const err=$('#up-err');err.textContent='';
+  if(!can('upload'))return;
+  if(!S.up)return err.textContent='Pilih file dulu.';
+  const {m,errs}=readMeta('up');if(errs.length)return err.textContent=errs.join(' ');
+  const btn=$('[data-act="up-save"]');btn.disabled=true;
+  try{
+    const d=await createDoc(m,S.up.u8,{name:S.up.name,ext:S.up.ext});
+    await logAudit('Unggah',d,d.file.name+' · '+fmtSize(d.file.size)+' · SHA-256 '+d.file.hash.slice(0,12));
+    S.up=null;S.openId=d.id;S.tab='repository';S.q='';location.hash='#repository';toast('Tersimpan terenkripsi sebagai Draft.');render();
+  }catch(e){btn.disabled=false;err.textContent='Gagal menyimpan: '+e.message}
+}
+
+/* ---------- drawer ---------- */
+function renderDrawer(){
+  const w=$('#drawer-wrap');const d=S.openId&&byId(S.openId);
+  if(!d||!visible(d)){w.innerHTML='';S.openId=null;return}
+  const gone=d.disposition==='musnah',ri=d.isRecord?retInfo(d):null,c=CLS[d.cls]||{name:d.cls};
+  const A=[];
+  if(!gone){A.push(`<button class="btn sm" data-act="preview" data-id="${d.id}">${ico('eye',16)}Pratinjau</button>`);
+    if(DL)A.push(`<button class="btn sm" data-act="download" data-id="${d.id}">${ico('download',16)}Unduh</button>`)}
+  if(canEditDoc(d)){A.push(`<button class="btn sm" data-act="edit" data-id="${d.id}">${ico('edit',16)}Edit metadata</button>`);
+    if(['draft','revisi'].includes(d.status))A.push(`<label class="btn sm" for="rep-file">${ico('upload',16)}Versi baru</label><input id="rep-file" type="file" hidden accept=".${EXT.join(',.')}">`)}
+  const W=[];
+  if(!d.isRecord){
+    if(can('submit')&&['draft','revisi'].includes(d.status))W.push(`<button class="btn sm primary" data-act="wf-submit" data-id="${d.id}">Ajukan review</button>`);
+    if(can('review')&&d.status==='review')W.push(`<button class="btn sm mint" data-act="wf-pass" data-id="${d.id}">Lolos review</button><button class="btn sm pink" data-act="wf-return" data-id="${d.id}">Kembalikan</button>`);
+    if(can('approve')&&d.status==='approval')W.push(`<button class="btn sm mint" data-act="wf-approve" data-id="${d.id}">Setujui</button><button class="btn sm pink" data-act="wf-reject" data-id="${d.id}">Tolak</button>`);
+    if(can('declare')&&d.status==='terbit')W.push(`<button class="btn sm blue" data-act="declare" data-id="${d.id}">Jadikan record</button>`);
+  }else if(!d.disposition&&can('hold'))W.push(`<button class="btn sm" data-act="${d.hold?'release':'hold'}" data-id="${d.id}">${d.hold?'Lepas legal hold':'Pasang legal hold'}</button>`);
+  if(d.isRecord&&!d.disposition&&ri.phase==='due'&&can('dispose')&&!d.hold)W.push(c.nasib==='musnah'?`<button class="btn sm danger" data-act="dispose" data-id="${d.id}">Musnahkan</button>`:`<button class="btn sm blue" data-act="static" data-id="${d.id}">Serahkan ke arsip statis</button>`);
+  let pv='';
+  if(S.prev&&S.prev.id===d.id){
+    pv=`<section class="card flat"><div class="hd" style="margin-bottom:8px"><h3>Pratinjau</h3><button class="btn sm" data-act="close-preview">Tutup</button></div>
+      <p class="alert ${S.prev.ok?'ok':'bad'}" style="margin-bottom:8px">${S.prev.ok?'Integritas terverifikasi: SHA-256 cocok.':'Peringatan: SHA-256 tidak cocok dengan catatan.'}</p>
+      ${S.prev.kind==='text'?`<pre class="pv">${esc(S.prev.text)}</pre>`:S.prev.kind==='img'?`<img class="pv" src="${S.prev.url}" alt="Pratinjau ${esc(d.title)}">`:`<p class="muted">Pratinjau belum tersedia untuk tipe .${esc(d.file.ext)} di sini. Pakai Unduh untuk membukanya.</p>`}</section>`;
+  }
+  $('#drawer-wrap').innerHTML=`<div class="ov" data-act="drawer-bg"><aside class="drawer" role="dialog" aria-modal="true" aria-label="Detail dokumen">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="min-width:0"><h2 style="overflow-wrap:anywhere">${esc(d.title)}</h2>
+      <div class="rchips" style="margin-top:8px">${pill(d)}${clsChip(d)}${secChip(d)}${d.hold?'<span class="pill p-pink">Legal hold</span>':''}${d.isRecord?'<span class="pill p-lime">Record terkunci</span>':''}</div></div>
+      <button class="btn sm" data-act="close-drawer" aria-label="Tutup">${ico('x',16)}</button></div>
+    ${A.length||W.length?`<div class="acts">${A.join('')}${W.join('')}</div>`:''}
+    ${!DL&&!gone?'<p class="muted" style="font-size:12px">Unduh file belum tersedia di tampilan ini.</p>':''}
+    ${pv}
+    ${d.isRecord?`<section class="card flat"><h3 style="margin-bottom:6px">Retensi</h3>${d.disposition?`<p>${d.disposition==='musnah'?'Dimusnahkan':'Diserahkan sebagai arsip statis'} pada ${fmtD(d.disposalDate)}.${d.disposalNote?' Catatan: '+esc(d.disposalNote):''}</p>`:`${tlHTML(d)}<p class="muted" style="margin-top:6px;font-size:13px">${ri.phase==='due'?'Sudah lewat masa retensi.':'Sisa '+ri.daysLeft+' hari sampai jatuh tempo.'} Nasib akhir: <b>${nasibLabel(c.nasib)}</b>.${d.hold?' Ditahan: '+esc(d.holdNote||''):''}</p>`}</section>`:''}
+    <section class="card flat"><h3 style="margin-bottom:8px">Metadata</h3><dl class="meta">
+      <dt>Nomor</dt><dd>${esc(d.number||'-')}</dd><dt>Tanggal</dt><dd>${fmtD(d.docDate)}</dd><dt>Klasifikasi</dt><dd>${esc(d.cls)} · ${esc(c.name)}</dd>
+      <dt>Unit</dt><dd>${esc(d.unit||'-')}</dd><dt>Pencipta</dt><dd>${esc(d.author||'-')}</dd><dt>Kata kunci</dt><dd>${esc((d.tags||[]).join(', ')||'-')}</dd>
+      <dt>Deskripsi</dt><dd>${esc(d.desc||'-')}</dd></dl></section>
+    <section class="card flat"><h3 style="margin-bottom:8px">File</h3><dl class="meta"><dt>Nama</dt><dd>${esc(d.file.name)}</dd><dt>Ukuran</dt><dd>${gone?'dihapus':fmtSize(d.file.size)}</dd>
+      <dt>Versi</dt><dd>v${d.version}${d.versions.length>1?' · '+d.versions.map(v=>'v'+v.v+' '+v.hash.slice(0,8)).join(', '):''}</dd><dt>SHA-256</dt><dd class="mono">${d.file.hash}</dd></dl></section>
+    <section class="card flat"><h3 style="margin-bottom:8px">Riwayat</h3><ul class="hist">${d.history.slice().reverse().map(h=>`<li><b>${esc(h.action)}</b>${h.note?` · ${esc(h.note)}`:''}<br><small>${esc(h.actor)} · ${fmtDT(h.ts)}</small></li>`).join('')}</ul></section>
+  </aside></div>`;
+}
+function tlHTML(d){
+  const r=retInfo(d);
+  return `<div class="tlw"><div class="tl"><i class="a" style="width:${r.aPct.toFixed(2)}%"></i><i class="i" style="width:${(100-r.aPct).toFixed(2)}%"></i></div><b class="tl-mark" style="left:calc(${r.pct.toFixed(2)}% - 2px)" title="Hari ini"></b></div>
+    <div class="tl-l"><span>Aktif s.d. ${fmtD(r.aEnd)}</span><span>Inaktif s.d. ${fmtD(r.iEnd)}</span></div>`;
+}
+function openDoc(id){if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null;S.openId=id;renderDrawer()}
+function closeDrawer(){if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null;S.openId=null;renderDrawer()}
+async function doPreview(id){
+  const d=byId(id);if(!d)return;
+  try{const {buf,ok}=await readFileOf(d);if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);
+    const p={id,ok,kind:'none'};
+    if(TEXT_EXT.includes(d.file.ext)){p.kind='text';p.text=td.decode(new Uint8Array(buf).slice(0,6000))}
+    else if(IMG_EXT.includes(d.file.ext)){p.kind='img';p.url=URL.createObjectURL(new Blob([buf],{type:'image/'+(d.file.ext==='jpg'?'jpeg':d.file.ext)}))}
+    S.prev=p;await logAudit('Lihat dokumen',d,ok?'integritas OK':'HASH TIDAK COCOK');renderDrawer();
+  }catch(e){toast('Gagal membuka: '+e.message,'bad')}
+}
+async function doDownload(id){
+  const d=byId(id);if(!d||!DL)return;
+  try{const {buf,ok}=await readFileOf(d);
+    if(!ok&&!(await ask({title:'Hash tidak cocok',body:'Isi file berbeda dari catatan saat diunggah. Tetap unduh?',confirm:'Tetap unduh',tone:'danger'})!==null))return;
+    await DL.save({filename:d.file.name,data:new Blob([buf])});
+    await logAudit('Unduh',d,d.file.name+(ok?'':' · HASH TIDAK COCOK'));toast('File diunduh.');
+  }catch(e){if(e&&e.code==='declined')return;toast('Unduh gagal'+(e&&e.code?' ('+e.code+')':''),'bad')}
+}
+async function doReplace(f){
+  const d=byId(S.openId);if(!d||!f||!canEditDoc(d))return;
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(!EXT.includes(ext)||f.size===0||f.size>MAX)return toast('File tidak valid (tipe atau ukuran).','bad');
+  const u8=new Uint8Array(await f.arrayBuffer());if(!sniffOK(ext,u8))return toast('Isi file tidak cocok dengan ekstensinya.','bad');
+  const hash=await sha256(u8),now=new Date().toISOString();
+  await store.put('files',d.id,await enc(u8,'file:'+d.id));
+  d.version++;d.file={name:safeName(f.name),ext,size:u8.length,hash};d.versions.push({v:d.version,hash,ts:now,name:d.file.name,size:u8.length});d.text=extractText(ext,u8);
+  addHistory(d,'Versi baru v'+d.version,d.file.name);await saveDoc(d);await logAudit('Versi baru',d,'v'+d.version+' · SHA-256 '+hash.slice(0,12));
+  if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null;toast('Versi baru tersimpan.');render();
+}
+function editModal(id){
+  const d=byId(id);if(!d||!canEditDoc(d))return;
+  modal(`<h3>Edit metadata</h3>${metaForm('ed',d)}<p class="err" id="ed-err" role="alert"></p>
+    <div class="row-end"><button class="btn" data-act="modal-close">Batal</button><button class="btn primary" data-act="edit-save" data-id="${d.id}">Simpan</button></div>`);
+  updateRetPreview('ed');
+}
+async function saveEdit(id){
+  const d=byId(id);if(!d||!canEditDoc(d))return;const {m,errs}=readMeta('ed');
+  if(errs.length)return $('#ed-err').textContent=errs.join(' ');
+  const ch=['title','number','docDate','cls','sec','unit','author','desc'].filter(k=>d[k]!==m[k]);if(d.tags.join('|')!==m.tags.join('|'))ch.push('tags');
+  Object.assign(d,m);addHistory(d,'Metadata diubah',ch.join(', '));await saveDoc(d);await logAudit('Ubah metadata',d,ch.join(', ')||'tanpa perubahan');
+  closeModal();toast('Metadata disimpan.');render();
+}
+
+/* ---------- workflow ---------- */
+const WF={
+  'wf-submit':{perm:'submit',from:['draft','revisi'],to:'review',label:'Diajukan ke review'},
+  'wf-pass':{perm:'review',from:['review'],to:'approval',label:'Lolos review',ask:{title:'Lolos review?',label:'Catatan reviewer (opsional)',confirm:'Teruskan ke Approver'}},
+  'wf-return':{perm:'review',from:['review'],to:'revisi',label:'Dikembalikan untuk revisi',ask:{title:'Kembalikan untuk revisi',label:'Apa yang perlu diperbaiki?',required:true,confirm:'Kembalikan',tone:'pink'}},
+  'wf-approve':{perm:'approve',from:['approval'],to:'terbit',label:'Disetujui dan terbit',ask:{title:'Setujui dokumen ini?',label:'Catatan approver (opsional)',confirm:'Setujui dan terbitkan',tone:'mint'}},
+  'wf-reject':{perm:'approve',from:['approval'],to:'revisi',label:'Ditolak, perlu revisi',ask:{title:'Tolak dokumen',label:'Alasan penolakan',required:true,confirm:'Tolak',tone:'pink'}}
+};
+async function doWf(act,id){
+  const d=byId(id),cfg=WF[act];
+  if(!d||!cfg||d.isRecord||!can(cfg.perm)||!cfg.from.includes(d.status))return toast('Aksi ini tidak tersedia untuk peranmu atau status dokumen.','warn');
+  let note='';if(cfg.ask){const r=await ask(cfg.ask);if(r===null)return;note=r}
+  d.status=cfg.to;addHistory(d,cfg.label,note);await saveDoc(d);await logAudit(cfg.label,d,note);toast(cfg.label+'.');render();
+}
+async function doDeclare(id){
+  const d=byId(id);if(!d||d.isRecord||d.status!=='terbit'||!can('declare'))return;
+  const c=CLS[d.cls];
+  const r=await ask({title:'Jadikan record?',body:`Setelah ini <b>file dan metadata dikunci</b> sebagai bukti. Jadwal retensi ${c.aktif} tahun aktif + ${c.inaktif} tahun inaktif mulai berlaku, nasib akhir: ${nasibLabel(c.nasib)}.`,label:'Catatan (opsional)',confirm:'Kunci jadi record',tone:'blue'});
+  if(r===null)return;
+  d.isRecord=true;d.recordDate=isoDate(new Date());addHistory(d,'Dinyatakan sebagai record',r);await saveDoc(d);await logAudit('Dinyatakan record',d,r||'dikunci, retensi mulai');toast('Dokumen jadi record dan terkunci.');render();
+}
+async function doDispose(act,id){
+  const d=byId(id);if(!d||!d.isRecord||d.disposition||d.hold||!can('dispose')||retInfo(d).phase!=='due')return toast('Belum bisa diproses: belum jatuh tempo atau sedang ditahan.','warn');
+  const musnah=act==='dispose';
+  const r=await ask(musnah?{title:'Musnahkan arsip?',body:'File dihapus <b>permanen</b>. Metadata dan jejak audit tetap ada sebagai bukti pemusnahan.',label:'Nomor berita acara / alasan',required:true,confirm:'Musnahkan',tone:'danger'}
+    :{title:'Serahkan sebagai arsip statis?',body:'Arsip bernilai guna permanen. File tetap disimpan dan tidak lagi dihitung retensinya.',label:'Catatan serah (opsional)',confirm:'Serahkan',tone:'blue'});
+  if(r===null)return;
+  if(musnah){await store.del('files',d.id);d.text='';d.file={...d.file,destroyed:true}}
+  d.disposition=musnah?'musnah':'statis';d.disposalDate=isoDate(new Date());d.disposalNote=r;
+  addHistory(d,musnah?'Dimusnahkan':'Diserahkan sebagai arsip statis',r);await saveDoc(d);await logAudit(musnah?'Pemusnahan':'Arsip statis',d,r);
+  if(S.prev){if(S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null}toast(musnah?'Arsip dimusnahkan.':'Diserahkan sebagai arsip statis.');render();
+}
+async function doHold(act,id){
+  const d=byId(id);if(!d||!d.isRecord||d.disposition||!can('hold'))return;
+  const on=act==='hold',r=await ask({title:on?'Pasang legal hold':'Lepas legal hold',body:on?'Arsip ditahan dan tidak bisa dimusnahkan selama hold aktif.':'Arsip bisa diproses lagi sesuai jadwal retensi.',label:on?'Alasan hold':'Catatan (opsional)',required:on,confirm:on?'Pasang hold':'Lepas hold',tone:on?'pink':'primary'});
+  if(r===null)return;
+  d.hold=on;d.holdNote=on?r:'';addHistory(d,on?'Legal hold dipasang':'Legal hold dilepas',r);await saveDoc(d);await logAudit(on?'Legal hold':'Lepas legal hold',d,r);toast(on?'Legal hold dipasang.':'Legal hold dilepas.');render();
+}
+function pageWorkflow(){
+  const vis=S.docs.filter(d=>visible(d)&&!d.isRecord);
+  const cols=[['Draft',d=>['draft','revisi'].includes(d.status)],['Review',d=>d.status==='review'],['Persetujuan',d=>d.status==='approval'],['Terbit',d=>d.status==='terbit']];
+  const btns=d=>{const b=[];
+    if(can('submit')&&['draft','revisi'].includes(d.status))b.push(`<button class="btn sm primary" data-act="wf-submit" data-id="${d.id}">Ajukan review</button>`);
+    if(can('review')&&d.status==='review')b.push(`<button class="btn sm mint" data-act="wf-pass" data-id="${d.id}">Lolos</button><button class="btn sm pink" data-act="wf-return" data-id="${d.id}">Kembalikan</button>`);
+    if(can('approve')&&d.status==='approval')b.push(`<button class="btn sm mint" data-act="wf-approve" data-id="${d.id}">Setujui</button><button class="btn sm pink" data-act="wf-reject" data-id="${d.id}">Tolak</button>`);
+    if(can('declare')&&d.status==='terbit')b.push(`<button class="btn sm blue" data-act="declare" data-id="${d.id}">Jadikan record</button>`);
+    return b.join('')};
+  return `<div class="hd"><h1 style="font-size:2rem">Workflow</h1><p class="muted" style="max-width:52ch">Alur: Draft, Review, Persetujuan, Terbit, lalu dijadikan record. Tombol yang muncul mengikuti peranmu (<b>${ROLES[S.role].label}</b>).</p></div>
+  ${!S.docs.length?emptyHTML('Belum ada dokumen di alur','Upload dokumen dulu. Setelah itu dia muncul di kolom Draft dan bisa diajukan sampai terbit.',can('upload')?'<a class="btn primary" href="#upload">Upload dokumen</a>':''):''}<div class="board"${!S.docs.length?' hidden':''}>${cols.map(([n,f])=>{const items=vis.filter(f);return `<section class="col"><h3>${n}<span class="pill">${items.length}</span></h3>
+    ${items.map(d=>{const last=d.history[d.history.length-1];return `<div class="wcard"><button class="linkbtn" style="text-align:left;color:var(--ink);text-decoration:none" data-act="open" data-id="${d.id}"><b>${esc(d.title)}</b></button>
+      <div class="rchips">${clsChip(d)}${secChip(d)}${d.status==='revisi'?'<span class="pill p-pink">Revisi</span>':''}</div>
+      ${d.status==='revisi'&&last&&last.note?`<p class="muted" style="font-size:13px">Catatan: ${esc(last.note)}</p>`:''}
+      <div class="acts">${btns(d)}</div></div>`}).join('')||'<p class="muted" style="font-size:13px">Kosong.</p>'}</section>`}).join('')}</div>`;
+}
+
+/* ---------- retensi ---------- */
+function pageRetensi(){
+  const filters=[['','Semua'],['rec-aktif','Aktif'],['rec-inaktif','Inaktif'],['rec-due','Jatuh tempo'],['done','Selesai']];
+  const recs=S.docs.filter(d=>visible(d)&&d.isRecord).filter(d=>{const k=stageOf(d).key;return !S.retF||(S.retF==='done'?['musnah','statis'].includes(k):k===S.retF)})
+    .sort((a,b)=>retInfo(a).iEnd-retInfo(b).iEnd);
+  return `<div class="hd"><h1 style="font-size:2rem">Retensi arsip</h1></div>
+  <section class="card" style="margin-bottom:20px"><h2 style="margin-bottom:6px">Jadwal retensi (contoh)</h2><p class="muted" style="margin-bottom:12px">Angka di bawah hanya contoh belajar. Pakai Jadwal Retensi Arsip (JRA) resmi organisasimu untuk operasional.</p>
+    <div class="tablewrap"><table><thead><tr><th>Kode</th><th>Klasifikasi</th><th>Aktif</th><th>Inaktif</th><th>Nasib akhir</th></tr></thead><tbody>
+    ${Object.entries(CLS).map(([k,c])=>`<tr><td class="n"><span class="pill" style="--c:${c.c}"><i class="dot"></i>${k}</span></td><td>${c.name}</td><td class="n">${c.aktif} th</td><td class="n">${c.inaktif} th</td><td>${nasibLabel(c.nasib)}</td></tr>`).join('')}</tbody></table></div></section>
+  <div class="toolbar">${filters.map(([v,l])=>`<button class="btn sm${S.retF===v?' primary':''}" data-act="ret-f" data-v="${v}">${l}</button>`).join('')}</div>
+  <div class="list">${recs.map(d=>{const c=CLS[d.cls],ri=retInfo(d),done=d.disposition;
+    return `<article class="card" style="box-shadow:3px 3px 0 var(--shadow)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start">
+      <div style="min-width:0"><button class="linkbtn" style="color:var(--ink);text-decoration:none;text-align:left" data-act="open" data-id="${d.id}"><b style="font:700 1.05rem var(--f-display);overflow-wrap:anywhere">${esc(d.title)}</b></button>
+      <div class="rchips" style="margin-top:4px">${clsChip(d)}${secChip(d)}${d.hold?'<span class="pill p-pink">Legal hold</span>':''}</div></div>${pill(d)}</div>
+      ${done?`<p class="muted" style="margin-top:10px">${d.disposition==='musnah'?'Dimusnahkan':'Diserahkan sebagai arsip statis'} pada ${fmtD(d.disposalDate)}.</p>`:`<div style="margin-top:10px">${tlHTML(d)}</div>
+      <div class="acts" style="margin-top:10px;align-items:center"><span class="muted" style="font-size:13px">Nasib akhir: <b>${nasibLabel(c.nasib)}</b> · ${ri.phase==='due'?'lewat masa retensi':ri.daysLeft+' hari lagi'}</span>
+      ${can('hold')?`<button class="btn sm" data-act="${d.hold?'release':'hold'}" data-id="${d.id}">${d.hold?'Lepas hold':'Tahan (legal hold)'}</button>`:''}
+      ${ri.phase==='due'&&can('dispose')&&!d.hold?(c.nasib==='musnah'?`<button class="btn sm danger" data-act="dispose" data-id="${d.id}">Musnahkan</button>`:`<button class="btn sm blue" data-act="static" data-id="${d.id}">Serahkan ke arsip statis</button>`):''}</div>
+      ${ri.phase==='due'&&d.hold?'<p class="alert warn" style="margin-top:10px;font-size:13px">Sudah jatuh tempo tapi ditahan. Pemusnahan diblokir sampai hold dilepas.</p>':''}`}</article>`}).join('')||emptyHTML('Belum ada record','Dokumen yang sudah terbit bisa dijadikan record oleh Arsiparis lewat Workflow. Setelah itu muncul di sini lengkap dengan garis waktu retensinya.','<a class="btn primary" href="#workflow">Buka Workflow</a>')}</div>`;
+}
+
+/* ---------- audit ---------- */
+function pageAudit(){
+  if(!can('audit'))return `<div class="card"><h2>Audit trail dikunci buat peranmu</h2><p class="muted" style="margin-top:8px">Jejak audit hanya bisa dibaca <b>Approver</b> dan <b>Arsiparis</b>. Ini contoh pemisahan tugas: orang yang mengerjakan dokumen tidak otomatis boleh membaca log pengawasnya.</p></div>`;
+  const r=S.auditRes;
+  return `<div class="hd"><h1 style="font-size:2rem">Audit trail</h1><div class="acts"><button class="btn primary" data-act="verify">${ico('shield',16)}Verifikasi rantai</button>
+    ${DL&&can('exportAudit')?`<button class="btn" data-act="export">${ico('download',16)}Ekspor JSON</button>`:''}</div></div>
+  ${r?`<p class="alert ${r.ok?'ok':'bad'}" style="margin-bottom:14px" role="status">${r.ok?`Rantai utuh. ${r.n} entri terverifikasi, tidak ada yang diubah atau hilang di tengah.`:`Rantai putus di entri #${r.at}: ${esc(r.why)}.`}</p>`:''}
+  <div class="toolbar"><label class="search">${ico('search')}<input id="audit-q" type="search" placeholder="Filter aksi, pelaku, atau dokumen" value="${esc(S.auditQ)}" aria-label="Filter audit"></label></div>
+  <div id="audit-rows"></div>`;
+}
+function renderAuditRows(){
+  const box=$('#audit-rows');if(!box)return;const q=S.auditQ.toLowerCase();
+  let rows=S.audit.slice().reverse().filter(e=>!q||(e.action+' '+e.actor+' '+e.docTitle+' '+e.detail).toLowerCase().includes(q));const total=rows.length;rows=rows.slice(0,300);
+  box.innerHTML=`<div class="tablewrap"><table><thead><tr><th>#</th><th>Waktu</th><th>Pelaku</th><th>Aksi</th><th>Dokumen</th><th>Detail</th><th>Hash</th></tr></thead><tbody>
+  ${rows.map(e=>`<tr><td class="n">${e.seq}</td><td class="n">${fmtDT(e.ts)}</td><td>${esc(e.actor)}</td><td><b>${esc(e.action)}</b></td><td>${esc(e.docTitle||'-')}</td><td>${esc(e.detail||'')}</td><td class="mono n">${e.hash.slice(0,8)}</td></tr>`).join('')||'<tr><td colspan="7">Belum ada entri yang cocok.</td></tr>'}</tbody></table></div>
+  ${total>300?`<p class="muted" style="margin-top:8px">Menampilkan 300 terbaru dari ${total} entri.</p>`:''}`;
+}
+
+/* ---------- belajar ---------- */
+const QZ=[
+  ['Draft proposal yang direvisi tiap hari','dokumen','Masih berubah dan belum jadi bukti final, jadi masih dokumen.'],
+  ['Kontrak yang sudah ditandatangani kedua pihak','record','Final dan jadi bukti transaksi. Isinya tidak boleh diubah lagi.'],
+  ['Template surat yang dipakai berulang','dokumen','Alat kerja, bukan bukti dari satu kegiatan tertentu.'],
+  ['Notulen rapat yang sudah disahkan','record','Sudah final dan jadi bukti keputusan rapat.'],
+  ['Catatan brainstorming pribadi','dokumen','Informasi kerja tanpa fungsi bukti resmi.'],
+  ['Bukti pembayaran ke vendor','record','Bukti transaksi yang harus utuh dan bisa diaudit selama masa retensinya.']
+];
+function pageBelajar(){
+  return `<div class="hd"><h1 style="font-size:2rem">Dokumen vs record vs arsip</h1></div>
+  <div class="cmp" style="margin-bottom:20px">
+    <section class="card"><span class="pill p-grey">Dokumen</span><h3 style="margin:10px 0 6px">Informasi untuk kerja</h3><p class="muted">Informasi terekam yang dipakai bekerja. Boleh diedit, punya versi, dan dikerjakan bersama. Draft dan template adalah dokumen.</p></section>
+    <section class="card"><span class="pill p-lime">Record</span><h3 style="margin:10px 0 6px">Dokumen yang dikunci jadi bukti</h3><p class="muted">Dokumen final yang jadi bukti kegiatan atau transaksi. Isinya tidak boleh diubah, punya konteks, dan dikelola dengan jadwal retensi.</p></section>
+    <section class="card"><span class="pill p-blue">Arsip</span><h3 style="margin:10px 0 6px">Record sepanjang hidupnya</h3><p class="muted">Dalam UU No. 43 Tahun 2009 tentang Kearsipan, arsip dinamis (aktif lalu inaktif) bisa berakhir dimusnahkan, atau jadi arsip statis yang diserahkan ke lembaga kearsipan.</p></section></div>
+  <section class="card" style="margin-bottom:20px"><h2 style="margin-bottom:12px">Bedanya, sekilas</h2><div class="tablewrap"><table><thead><tr><th></th><th>Dokumen</th><th>Record</th></tr></thead><tbody>
+    <tr><td><b>Boleh diubah?</b></td><td>Ya, ada versi dan revisi</td><td>Tidak, dikunci</td></tr>
+    <tr><td><b>Fungsinya</b></td><td>Alat kerja dan kolaborasi</td><td>Bukti kegiatan atau transaksi</td></tr>
+    <tr><td><b>Dikelola dengan</b></td><td>Workflow dan versi</td><td>Klasifikasi, retensi, dan audit</td></tr>
+    <tr><td><b>Nasibnya</b></td><td>Dipakai, diganti, atau dibuang</td><td>Disimpan sesuai jadwal lalu dimusnahkan atau jadi arsip statis</td></tr>
+    <tr><td><b>Di ArsipKu</b></td><td>Draft sampai Terbit</td><td>Setelah tombol Jadikan record</td></tr></tbody></table></div>
+    <p class="muted" style="margin-top:10px">Semua record adalah dokumen, tapi tidak semua dokumen adalah record.</p></section>
+  <section class="card" style="margin-bottom:20px"><h2 style="margin-bottom:12px">Record yang bisa dipercaya punya 4 ciri</h2><div class="cmp">
+    ${[['Otentik','Benar-benar yang diklaim dan dibuat oleh pihak yang tepat.'],['Andal','Isinya bisa dipercaya sebagai gambaran kegiatan.'],['Utuh','Lengkap dan tidak berubah tanpa jejak.'],['Dapat digunakan','Bisa ditemukan, dibuka, dan dipahami saat dibutuhkan.']].map(([a,b])=>`<div class="q"><b>${a}</b><span class="muted">${b}</span></div>`).join('')}</div>
+    <p class="muted" style="margin-top:10px">Ciri ini mengacu pada standar manajemen record ISO 15489. Di ArsipKu: hash SHA-256 menjaga keutuhan, audit trail menjaga otentisitas, metadata dan pencarian menjaga keterpakaian.</p></section>
+  <section class="card"><div class="hd" style="margin-bottom:12px"><h2>Tebak: dokumen atau record?</h2><button class="btn sm" data-act="quiz-reset">Ulangi</button></div><div id="quiz" class="stack"></div></section>`;
+}
+function renderQuiz(){
+  const box=$('#quiz');if(!box)return;const done=Object.keys(S.quiz).length,score=Object.entries(S.quiz).filter(([i,v])=>v===QZ[i][1]).length;
+  box.innerHTML=QZ.map(([t,ans,why],i)=>{const a=S.quiz[i];
+    return `<div class="q"><b>${esc(t)}</b>${a===undefined?`<div class="acts"><button class="btn sm" data-act="quiz" data-i="${i}" data-v="dokumen">Dokumen</button><button class="btn sm" data-act="quiz" data-i="${i}" data-v="record">Record</button></div>`
+      :`<p class="alert ${a===ans?'ok':'bad'}" style="font-size:13px"><b>${a===ans?'Tepat.':'Kurang tepat.'}</b> Jawabannya ${ans}. ${why}</p>`}</div>`}).join('')+(done===QZ.length?`<p class="alert ok"><b>Skor kamu ${score}/${QZ.length}.</b> ${score===QZ.length?'Paham banget.':'Coba ulangi biar makin yakin.'}</p>`:'');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;const act=el.dataset.act,id=el.dataset.id;
+  if(act==='modal-bg'){if(e.target===el&&modalCancel)modalCancel();return}
+  if(act==='drawer-bg'){if(e.target===el)closeDrawer();return}
+  switch(act){
+    case 'lock':return lockVault('manual');
+    case 'open':return openDoc(id);
+    case 'close-drawer':return closeDrawer();
+    case 'goto-upload':location.hash='#upload';return;
+    case 'preview':return doPreview(id);
+    case 'close-preview':if(S.prev&&S.prev.url)URL.revokeObjectURL(S.prev.url);S.prev=null;return renderDrawer();
+    case 'download':return doDownload(id);
+    case 'edit':return editModal(id);
+    case 'edit-save':return saveEdit(id);
+    case 'modal-close':return closeModal();
+    case 'up-save':return saveUpload();
+    case 'declare':return doDeclare(id);
+    case 'dispose':case 'static':return doDispose(act,id);
+    case 'hold':case 'release':return doHold(act,id);
+    case 'ret-f':S.retF=el.dataset.v;return render();
+    case 'verify':S.auditRes=await verifyAudit();await logAudit('Verifikasi rantai audit',null,S.auditRes.ok?'utuh':'rusak di #'+S.auditRes.at);render();return;
+    case 'export':try{await DL.save({filename:'arsipku-audit-'+isoDate(new Date())+'.json',data:JSON.stringify(S.audit,null,2)});await logAudit('Ekspor audit',null,S.audit.length+' entri');toast('Audit diekspor.')}catch(er){if(!er||er.code!=='declined')toast('Ekspor gagal.','bad')}return;
+    case 'quiz':S.quiz[el.dataset.i]=el.dataset.v;return renderQuiz();
+    case 'quiz-reset':S.quiz={};return renderQuiz();
+    case 'reset-ask':{const r=await ask({title:'Hapus vault ini?',body:'Semua dokumen, metadata, dan audit di browser ini dihapus permanen. Tidak bisa dibatalkan.',confirm:'Hapus semuanya',tone:'danger'});if(r!==null)await resetVault();return}
+  }
+  if(WF[act])return doWf(act,id);
+});
+document.addEventListener('submit',e=>{if(e.target.id==='gate-form'){e.preventDefault();onGate()}});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='repo-q'){S.q=t.value;renderRepoResults()}
+  else if(t.id==='audit-q'){S.auditQ=t.value;renderAuditRows()}
+  else if(/^(up|ed)-/.test(t.id||'')||(t.name||'').endsWith('-sec')){const p=(t.id||t.name).slice(0,2);updateMeter(p)}
+});
+document.addEventListener('change',async e=>{
+  const t=e.target,id=t.id||'';
+  if(id==='role-sel'){S.role=t.value;await logAudit('Ganti peran (simulasi)',null,'jadi '+ROLES[S.role].label);if(S.openId&&!byId(S.openId))S.openId=null;render()}
+  else if(id==='repo-cls'){S.fCls=t.value;renderRepoResults()}
+  else if(id==='repo-stage'){S.fStage=t.value;renderRepoResults()}
+  else if(id==='repo-sec'){S.fSec=t.value;renderRepoResults()}
+  else if(id==='repo-sort'){S.sort=t.value;renderRepoResults()}
+  else if(id==='up-file'&&t.files[0])pickFile(t.files[0]);
+  else if(id==='rep-file'&&t.files[0]){await doReplace(t.files[0]);t.value=''}
+  else if(id==='up-cls'||id==='ed-cls')updateRetPreview(id.slice(0,2));
+});
+document.addEventListener('dragover',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z){e.preventDefault();z.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z)z.classList.remove('over')});
+document.addEventListener('drop',e=>{const z=e.target.closest&&e.target.closest('#drop');if(z){e.preventDefault();z.classList.remove('over');if(e.dataTransfer.files[0])pickFile(e.dataTransfer.files[0])}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(modalCancel)modalCancel();else if(S.openId)closeDrawer()}});
+window.addEventListener('hashchange',()=>{if(!KEY)return;S.tab=tabFromHash();window.scrollTo(0,0);render()});
+const bump=()=>{lastActive=Date.now()};['pointerdown','keydown','scroll','touchstart'].forEach(ev=>window.addEventListener(ev,bump,{passive:true}));
+
+/* wrap render so audit rows fill after page paint */
+const _render=render;
+render=function(){_render();if(KEY&&S.tab==='audit')renderAuditRows()};
+
+/* ---------- start: no password, random device key (non-extractable) ---------- */
+async function startApp(){
+  try{
+    await initStore();
+    let k=await store.get('cfg','devkey');
+    if(!k){k=await crypto.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);await store.put('cfg','devkey',k)}
+    KEY=k;
+    const v=await store.get('cfg','vault');let ok=false;
+    if(v&&v.chk){try{ok=td.decode(await dec(v.chk,'check'))==='arsipku-ok'}catch(e){ok=false}}
+    if(!ok){
+      await Promise.all(STORES.map(s=>store.clear(s)));
+      await store.put('cfg','devkey',k);
+      await store.put('cfg','vault',{chk:await enc(te.encode('arsipku-ok'),'check'),v:2});
+      S.name='Kamu';await store.put('cfg','profile',await encJSON({name:S.name},'profile'));
+      S.docs=[];S.audit=[];S.role='staff';
+      await logAudit('Penyimpanan dibuat',null,'Enkripsi AES-256-GCM, kunci acak di perangkat');
+    }
+    await loadAll();
+    const ex=S.docs.filter(d=>d.example);
+    if(ex.length&&ex.length===S.docs.length){
+      await Promise.all(STORES.map(s=>store.clear(s)));await store.put('cfg','devkey',k);
+      await store.put('cfg','vault',{chk:await enc(te.encode('arsipku-ok'),'check'),v:2});
+      S.name='Kamu';await store.put('cfg','profile',await encJSON({name:S.name},'profile'));
+      S.docs=[];S.audit=[];await logAudit('Penyimpanan dibuat',null,'Enkripsi AES-256-GCM, kunci acak di perangkat');
+    }else if(ex.length){
+      for(const d of ex){await store.del('meta',d.id);await store.del('files',d.id)}
+      S.docs=S.docs.filter(d=>!d.example);await logAudit('Contoh data dihapus',null,ex.length+' dokumen contoh');
+    }
+    S.role='staff';S.tab=tabFromHash();render();
+  }catch(e){
+    $('#app').innerHTML='<main class="gate"><div class="gate-card"><h2>Gagal memulai</h2><p class="alert bad" role="alert">'+esc(e.message||e)+'</p><p class="muted">Muat ulang halaman. Kalau tetap gagal, browser ini mungkin memblokir penyimpanan atau enkripsi.</p></div></main>';
+  }
+}
+startApp();
+})();
+</script>
+
+</body></html>
